@@ -1,0 +1,10 @@
+DailyRoutines:
+  # App definitions
+  module: DailyRoutines
+  class: DailyRoutines
+  log_level: INFO
+  # HMI varaibles
+  turn_off_ligts_scene: scene.all_lights_off
+  ww_activate: input_boolean.ww_state
+  awake_state: binary_sensor.monitor_awake_state
+  next_awake_time: sensor.next_awake_time
