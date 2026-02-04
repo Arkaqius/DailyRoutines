@@ -10,6 +10,7 @@ class DailyRoutinesActionsMixin:
         """
         Activate the configured lights-off scene in Home Assistant.
         """
+        self.log("Activating lights-off scene.", level="INFO")
         self.turn_on(self.turn_off_lights_scene)
 
     def activate_goodmorning_lights_scene(self) -> None:
@@ -19,6 +20,7 @@ class DailyRoutinesActionsMixin:
         if not self.goodmorning_lights_scene:
             self.log("No goodmorning_lights_scene configured.", level="WARNING")
             return
+        self.log("Activating good-morning scene.", level="INFO")
         self.turn_on(self.goodmorning_lights_scene)
 
     def close_blinds_and_curtains(self) -> None:
@@ -31,6 +33,10 @@ class DailyRoutinesActionsMixin:
         """
         Turn warm water on or off.
         """
+        self.log(
+            f"Setting warm water {'on' if state else 'off'}.",
+            level="INFO",
+        )
         if state:
             self.turn_on(self.warm_water_entity)
         else:

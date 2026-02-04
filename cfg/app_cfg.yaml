@@ -1,9 +1,10 @@
 DailyRoutines:
   # App definitions
-  module: src.DailyRoutines
+  module: DailyRoutines
   class: DailyRoutines
-  log_level: INFO
-  # HMI variables
+  log_level: DEBUG
+
+  # UX variables
   turn_off_lights_scene: scene.all_lights_off
   # goodmorning_lights_scene: scene.good_morning
   ww_activate: input_boolean.ww_state

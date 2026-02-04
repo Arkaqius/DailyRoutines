@@ -7,8 +7,10 @@ triggering Home Assistant services and scheduling preparation tasks.
 
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+
 import appdaemon.plugins.hass.hassapi as hass
-from .routines_actions import DailyRoutinesActionsMixin
+
+from routines_actions import DailyRoutinesActionsMixin
 
 FIVE_MINUTES_SECONDS = 5 * 60
 
@@ -32,6 +34,7 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
         Optional args:
         - goodmorning_lights_scene
         """
+        self.log("Initializing DailyRoutines.", level="INFO")
         self.turn_off_lights_scene = self._get_required_arg(
             "turn_off_lights_scene", aliases=["turn_off_ligts_scene"]
         )
@@ -50,6 +53,10 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
         )
         self.listen_state(self.awake_triggered, self.awake_state_entity, new="awake")
         self.listen_state(self.next_awake_set, self.next_awake_entity)
+        self.log(
+            "DailyRoutines initialized.",
+            level="INFO",
+        )
 
     def _get_required_arg(self, key: str, aliases: Optional[list[str]] = None) -> str:
         """
@@ -66,6 +73,7 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
                     )
                     break
         if value is None:
+            self.log(f"Missing required app argument '{key}'.", level="ERROR")
             raise ValueError(f"Missing required app argument '{key}'.")
         return value
 
@@ -75,10 +83,15 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
         """
         value = self.args.get(key, default)
         if value is None:
+            self.log(f"Missing required app argument '{key}'.", level="ERROR")
             raise ValueError(f"Missing required app argument '{key}'.")
         try:
             return int(value)
         except (TypeError, ValueError) as exc:
+            self.log(
+                f"Invalid integer for app argument '{key}': {value}",
+                level="ERROR",
+            )
             raise ValueError(
                 f"Invalid integer for app argument '{key}': {value}"
             ) from exc
@@ -130,6 +143,7 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
             self.log(f"current_time [{current_time}].", level="DEBUG")
 
             if self._prep_timer_handle is not None:
+                self.log("Cancelling previously scheduled prep timer.", level="DEBUG")
                 self.cancel_timer(self._prep_timer_handle)
                 self._prep_timer_handle = None
 
@@ -159,26 +173,34 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
                     level="DEBUG",
                 )
         except ValueError:
-            self.log(f"Invalid datetime format for next awake time [{new}].")
+            self.log(
+                f"Invalid datetime format for next awake time [{new}].",
+                level="ERROR",
+            )
 
     def awake_preparation_tasks(self, kwargs: Any) -> None:
         """
         Perform wake-up preparation tasks (e.g., warm water on).
         """
-        self.log("Performing wake-up preparation tasks.")
+        self.log("Performing wake-up preparation tasks.", level="INFO")
         self._prep_timer_handle = None
         self.turn_warm_water(True)
         if self._prep_end_timer_handle is not None:
+            self.log("Cancelling previous prep-end timer.", level="DEBUG")
             self.cancel_timer(self._prep_end_timer_handle)
         self._prep_end_timer_handle = self.run_in(
             self.awake_preparation_tasks_end, FIVE_MINUTES_SECONDS
+        )
+        self.log(
+            f"Scheduled preparation end in {FIVE_MINUTES_SECONDS} seconds.",
+            level="DEBUG",
         )
 
     def awake_preparation_tasks_end(self, _: Any) -> None:
         """
         Finish wake-up preparation tasks (e.g., warm water off).
         """
-        self.log("Performing wake-up preparation tasks finishing")
+        self.log("Performing wake-up preparation tasks finishing", level="INFO")
         self.turn_warm_water(False)
         self._prep_end_timer_handle = None
 
@@ -194,7 +216,7 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
         # self.turn_off_fans()
         # self.turn_off_multimedia_devices()
 
-        self.log("Goodnight routine executed successfully.")
+        self.log("Goodnight routine executed successfully.", level="INFO")
 
     def awake_triggered(
         self, entity: str, attribute: str, old: str, new: str, kwargs: dict
@@ -204,4 +226,4 @@ class DailyRoutines(DailyRoutinesActionsMixin, hass.Hass):
         """
         self.activate_goodmorning_lights_scene()
         # self.open_blinds_and_curtains()
-        self.log("Awake routine executed successfully.")
+        self.log("Awake routine executed successfully.", level="INFO")
