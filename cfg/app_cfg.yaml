@@ -1,0 +1,12 @@
+DailyRoutines:
+  # App definitions
+  module: src.DailyRoutines
+  class: DailyRoutines
+  log_level: INFO
+  # HMI variables
+  turn_off_lights_scene: scene.all_lights_off
+  # goodmorning_lights_scene: scene.good_morning
+  ww_activate: input_boolean.ww_state
+  awake_state: binary_sensor.monitor_awake_state
+  next_awake_time: sensor.next_awake_time
+  prep_offset_minutes: 30
